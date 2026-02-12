@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+<title>💌 Love Letter</title>
+
+<style>
+
+:root{
+  --pink:#ff4da6;
+  --rose:#ff2d6f;
+  --bg1:#050510;
+  --bg2:#140a1a;
+  --text:#f6f7ff;
+  --radius:28px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+  margin:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  font-family:system-ui;
+  color:var(--text);
+
+  background:
+    radial-gradient(900px 700px at 15% 20%, rgba(255,77,166,.22), transparent 58%),
+    radial-gradient(900px 700px at 85% 80%, rgba(139,92,246,.18), transparent 60%),
+    linear-gradient(180deg,var(--bg1),var(--bg2));
+}
+
+/* overlay */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  backdrop-filter: blur(6px);
+  opacity:0;
+  pointer-events:none;
+  transition:.4s;
+}
+
+.overlay.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* SOUND BUTTON */
+.toolbar{
+  position:fixed;
+  top:15px;
+  right:15px;
+}
+
+.tbtn{
+  background:#0008;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:999px;
+  cursor:pointer;
+}
+
+/* ENVELOPE */
+.env{
+  width:min(460px,92vw);
+  aspect-ratio:16/10;
+  position:relative;
+  perspective:1800px;
+
+  /* 🚨 DROP SHADOW FILTER УСТГАСАН — BLUR ЗАСНА */
+}
+
+/* base */
+.base{
+  position:absolute;
+  inset:0;
+  border-radius:var(--radius);
+  background:linear-gradient(145deg,#ffffff10,#ffffff03);
+  border:1px solid #ffffff22;
+
+  /* drop-shadow-ийг BOX SHADOW болгосон */
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+
+/* SIDE FLAPS */
+
+.sideFlap{
+  position:absolute;
+  top:10%;
+  bottom:10%;
+  width:55%;
+  background:#ffffff10;
+}
+
+.left{
+  left:-6%;
+  clip-path: polygon(0 50%,100% 0,100% 100%);
+}
+
+.right{
+  right:-6%;
+  clip-path: polygon(100% 50%,0 0,0 100%);
+}
+
+/* TOP FLAP */
+
+.flap{
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:55%;
+  background:#ffffff15;
+
+  clip-path:polygon(0 0,100% 0,50% 100%);
+
+  transform-origin:top;
+  transition:1s;
+}
+
+.open .flap{
+  transform:rotateX(180deg);
+}
+
+/* SEAL */
+
+.seal{
+  position:absolute;
+  left:50%;
+  top:56%;
+  transform:translate(-50%,-50%);
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  border:none;
+  font-size:30px;
+  cursor:pointer;
+
+  background:linear-gradient(90deg,var(--pink),var(--rose));
+  box-shadow:0 0 30px #ff4da6;
+}
+
+/* LETTER */
+
+.letter{
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:10%;
+  height:72%;
+
+  background:#0f1424;
+  border-radius:20px;
+  padding:18px;
+
+  opacity:0;
+  transform:translateY(80%) scale(.6);
+  transition:1s;
+}
+
+.letter.show{
+  opacity:1;
+}
+
+.letter.pull{
+  transform:translateY(-25%) scale(1.08);
+}
+
+/* BIG POPUP */
+
+.letter.big{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(860px,94vw);
+  height:min(84vh,760px);
+
+  z-index:999;
+  overflow:auto;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 3px,
+      rgba(0,0,0,.04) 4px
+    ),
+    #0f1424;
+
+  border:1px solid #ffffff22;
+  box-shadow:0 90px 200px rgba(0,0,0,.85);
+
+  /* TEXT SHARP болгох */
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+
+/* HEADER */
+
+.header{
+  background:#0005;
+  padding:12px;
+  border-radius:16px;
+  margin-bottom:10px;
+}
+
+/* TEXT */
+
+.type{
+  white-space:pre-wrap;
+  line-height:1.9;
+  font-size:18px;
+  max-width:70ch;
+}
+
+/* CLOSE */
+
+.close{
+  position:sticky;
+  top:0;
+  float:right;
+  border:none;
+  background:#0008;
+  color:#fff;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+  <button class="tbtn" id="soundBtn">🔊</button>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="env" id="env">
+
+  <div class="base"></div>
+
+  <div class="sideFlap left"></div>
+  <div class="sideFlap right"></div>
+
+  <div class="flap"></div>
+
+  <div class="letter" id="letter">
+
+    <button class="close" id="close">✕</button>
+
+    <div class="header">
+      💌 Хайрт чамдаа — Надаас
+    </div>
+
+    <div class="type" id="typeArea"></div>
+  </div>
+
+  <button class="seal" id="seal">💗</button>
+
+</div>
+
+<script>
+
+const seal = document.getElementById("seal");
+const env = document.getElementById("env");
+const letter = document.getElementById("letter");
+const overlay = document.getElementById("overlay");
+const closeBtn = document.getElementById("close");
+
+let soundOn = true;
+
+document.getElementById("soundBtn").onclick = () =>{
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? "🔊":"🔇";
+};
+
+/* SIMPLE SOUND */
+function pop(){
+  if(!soundOn) return;
+
+  const ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type="triangle";
+  osc.frequency.value=500;
+
+  gain.gain.value=.2;
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime+.1);
+}
+
+/* TEXT */
+
+const text = `Борко минь ❤️
+
+Чамд бичих энэ хэдхэн мөр миний зүрхний хамгийн үнэн үгс юм.
+Чамайг учирсан тэр мөчөөс хойш миний өдрүүд илүү гэрэлтэй, 
+инээмсэглэл илүү дулаахан болсон.
+Чи миний амьдралд зүгээр нэг хүн биш — чи бол тайвшрал, урам зориг, аз жаргал юм.
+
+Хажууд чинь байх бүрт цаг хугацаа удааширч, бүх зүйл зөв газраа байгаа мэт санагддаг. 
+Чиний инээмсэглэл миний хамгийн дуртай “ая”, чиний гар миний хамгийн итгэлтэй “орон зай”.
+
+Ирээдүйд юу тохиолдохыг би мэдэхгүй ч нэг зүйлийг баттай мэднэ — тэр ирээдүйд чамтайгаа хамт алхмаар байна.
+Чамайг баярлуулах шалтгаан, түшиглэх мөр, бахархах хүн чинь байхын төлөө би үргэлж хичээнэ.
+Хайртай шүү 💗`;
+
+function typeWriter(t){
+  let i=0;
+  const area=document.getElementById("typeArea");
+  area.textContent="";
+
+  const inter=setInterval(()=>{
+    area.textContent+=t[i];
+    i++;
+    if(i>=t.length) clearInterval(inter);
+  },15);
+}
+
+/* OPEN */
+
+seal.onclick=()=>{
+
+  pop();
+
+  env.classList.add("open");
+  letter.classList.add("show");
+
+  requestAnimationFrame(()=>{
+    letter.classList.add("pull");
+  });
+
+  setTimeout(()=>{
+    letter.classList.add("big");
+    overlay.classList.add("show");
+
+    typeWriter(text);
+
+  },600);
+};
+
+/* CLOSE */
+
+function closeLetter(){
+
+  overlay.classList.remove("show");
+  letter.classList.remove("big");
+  letter.classList.remove("pull");
+
+  setTimeout(()=>{
+    letter.classList.remove("show");
+    env.classList.remove("open");
+    document.getElementById("typeArea").textContent="";
+  },300);
+}
+
+closeBtn.onclick=closeLetter;
+overlay.onclick=closeLetter;
+
+window.onkeydown=(e)=>{
+  if(e.key==="Escape") closeLetter();
+};
+
+</script>
+
+</body>
+</html>
